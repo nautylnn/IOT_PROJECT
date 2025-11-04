@@ -1,4 +1,5 @@
 #include "temp_humi_monitor.h"
+#include "global.h"
 DHT20 dht20;
 LiquidCrystal_I2C lcd(33,16,2);
 
@@ -6,7 +7,6 @@ LiquidCrystal_I2C lcd(33,16,2);
 void temp_humi_monitor(void *pvParameters){
 
     Wire.begin(11, 12);
-    Serial.begin(115200);
     dht20.begin();
 
     lcd.begin();
@@ -39,12 +39,12 @@ void temp_humi_monitor(void *pvParameters){
             //return;
         } else
         {
-            glob_temperature = temperature;
-            glob_humidity = humidity;
-            Serial.println("Semaphore was given.");
-            xSemaphoreGive(xBinarySemaphoreHumidity);
-            xSemaphoreGive(xBinarySemaphoreTemperature);
-
+        SensorData sensordata;
+        sensordata.temperature = temperature;
+        sensordata.humidity = humidity;
+        xQueueSend(xQueueForLedBlink, &sensordata, 0);
+        xQueueSend(xQueueForNeoPixel, &sensordata, 0);
+        xQueueSend(xQueueForTinyML, &sensordata, 0);
            
 
             lcd.clear();

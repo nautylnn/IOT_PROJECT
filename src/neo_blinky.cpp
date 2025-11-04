@@ -8,11 +8,12 @@ void neo_blinky(void *pvParameters){
     // Set all pixels to off to start
     strip.clear();
     strip.show();
+    SensorData data_receive;
 
     while(1) {                          
-    if(xSemaphoreTake(xBinarySemaphoreHumidity, portMAX_DELAY) == pdTRUE)
+    if(xQueueReceive(xQueueForNeoPixel, &data_receive, portMAX_DELAY) == pdTRUE)
     {
-    float humidity = glob_humidity;
+    float humidity = data_receive.humidity;
 
     uint32_t color;
     String status;
@@ -22,17 +23,17 @@ void neo_blinky(void *pvParameters){
         color = strip.Color(255,255,255);
         status = "ERROR";
     }
-    else if (humidity >= 0 && humidity < 40)
+    else if (humidity >= 0 && humidity < 60)
     {
         color = strip.Color(255,0,0);
         status = "LOW";
     }
-    else if (humidity >= 40 && humidity < 70)
+    else if (humidity >= 60 && humidity < 80)
     {
         color = strip.Color(0,255,0);
         status = "NORMAL";
     }
-    else if (humidity >= 70)
+    else if (humidity >= 80)
     {
         color = strip.Color(0,0,255);
         status = "WET";
