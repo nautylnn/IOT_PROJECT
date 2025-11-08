@@ -1,5 +1,4 @@
 #include "tinyml.h"
-
 // Globals, for the convenience of one-shot setup.
 namespace
 {
@@ -44,40 +43,35 @@ void setupTinyML()
     Serial.println("TensorFlow Lite Micro initialized on ESP32.");
 }
 
-void tiny_ml_task(void *pvParameters)
-{
-
+void tiny_ml_task(void *pvParameters) {
     setupTinyML();
-
-    while (1)
-    {
+    float temperature;
+    float humidity;
+    while (1) {
 
         // Prepare input data (e.g., sensor readings)
         // For a simple example, let's assume a single float input
-        SensorData data_receive;
-        if (xQueueReceive(xQueueForTinyML, &data_receive, portMAX_DELAY) == pdTRUE)
-        {
-            float temperature = data_receive.temperature;
-            float humidity = data_receive.humidity;
-            input->data.f[0] = temperature;
-            input->data.f[1] = humidity;
-
+        if (xSemaphoreTake(xBinarySemaphoreData, portMAX_DELAY) == pdTRUE) {
+            temperature = sensordata.temperature;
+            humidity = sensordata.humidity;
+            xSemaphoreGive(xBinarySemaphoreData);
+        }
+        input->data.f[0] = temperature;
+        input->data.f[1] = humidity;
 
         // Run inference
         TfLiteStatus invoke_status = interpreter->Invoke();
-        if (invoke_status != kTfLiteOk)
-        {
+        if (invoke_status != kTfLiteOk) {
             error_reporter->Report("Invoke failed");
             return;
         }
 
-                float result = output->data.f[0];
-                Serial.print("[TinyML] Data: (T:");
-                Serial.print(data_receive.temperature);
-                Serial.print(", H:");
-                Serial.print(data_receive.humidity);
-                Serial.print(") -> Result: ");
-                Serial.println(result);
+        float result = output->data.f[0];
+        Serial.print("[TinyML] Data: (T:");
+        Serial.print(temperature);
+        Serial.print(", H:");
+        Serial.print(humidity);
+        Serial.print(") -> Result: ");
+        Serial.println(result);
     }
-}
 }

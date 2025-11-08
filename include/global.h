@@ -26,15 +26,8 @@ extern String ssid;
 extern String password;
 extern boolean isWifiConnected;
 
+extern SensorData sensordata;
+
+extern SemaphoreHandle_t xBinarySemaphoreData;
 extern SemaphoreHandle_t xBinarySemaphoreInternet;
-extern SemaphoreHandle_t xBinarySemaphoreHumidity;
-extern SemaphoreHandle_t xBinarySemaphoreTemperature;
-extern SemaphoreHandle_t xBinarySemaphoreTinyML;
-extern SemaphoreHandle_t xSensorDataReadySem;
-
-extern SemaphoreHandle_t xSensorDataMutex;
-
-extern QueueHandle_t xQueueForLedBlink;
-extern QueueHandle_t xQueueForNeoPixel;
-extern QueueHandle_t xQueueForTinyML;
 #endif

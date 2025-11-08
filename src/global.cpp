@@ -14,10 +14,10 @@ String password = "12345678";
 String wifi_ssid = "abcde";
 String wifi_password = "123456789";
 boolean isWifiConnected = false;
+
+SensorData sensordata;
+SemaphoreHandle_t xBinarySemaphoreData = xSemaphoreCreateMutex();
 SemaphoreHandle_t xBinarySemaphoreInternet = xSemaphoreCreateBinary();
-SemaphoreHandle_t xBinarySemaphoreHumidity = xSemaphoreCreateBinary();
-SemaphoreHandle_t xBinarySemaphoreTemperature = xSemaphoreCreateBinary();
-SemaphoreHandle_t xBinarySemaphoreTinyML = xSemaphoreCreateBinary();
 
 QueueHandle_t xQueueForLedBlink = xQueueCreate(5, sizeof(SensorData));
 QueueHandle_t xQueueForNeoPixel = xQueueCreate(5, sizeof(SensorData));
