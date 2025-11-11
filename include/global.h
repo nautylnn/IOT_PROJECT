@@ -14,6 +14,16 @@ typedef struct {
     float humidity;
 } SensorData;
 
+typedef struct 
+{
+    float temperature;
+    float humidity;
+    float inference_result;
+    bool anomaly_detected;
+    String anomaly_type;
+    /* data */
+} MLResult;
+
 extern String WIFI_SSID;
 extern String WIFI_PASS;
 extern String CORE_IOT_TOKEN;
@@ -27,14 +37,14 @@ extern String password;
 extern boolean isWifiConnected;
 
 extern SemaphoreHandle_t xBinarySemaphoreInternet;
-extern SemaphoreHandle_t xBinarySemaphoreHumidity;
-extern SemaphoreHandle_t xBinarySemaphoreTemperature;
-extern SemaphoreHandle_t xBinarySemaphoreTinyML;
-extern SemaphoreHandle_t xSensorDataReadySem;
 
-extern SemaphoreHandle_t xSensorDataMutex;
 
 extern QueueHandle_t xQueueForLedBlink;
 extern QueueHandle_t xQueueForNeoPixel;
 extern QueueHandle_t xQueueForTinyML;
+
+extern QueueHandle_t xQueueMLResultforLED;
+extern QueueHandle_t xQueueMLResultforNEO;
+
+extern SemaphoreHandle_t xSemaphoreMutex;
 #endif

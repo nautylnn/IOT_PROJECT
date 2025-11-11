@@ -10,7 +10,43 @@ namespace
     TfLiteTensor *output = nullptr;
     constexpr int kTensorArenaSize = 8 * 1024; // Adjust size based on your model
     uint8_t tensor_arena[kTensorArenaSize];
+
+    float anomaly_threshold = 0.5;
+    unsigned long last_adjustment = 0;
+    int recent_anomalies = 0;
+    int total_readings = 0;
+    int readings = 10;
 } // namespace
+
+void SetAnomalyThreshold()
+{
+    if (total_readings < readings)
+    {
+        return;
+    }
+
+    float anomaly_ratio = (float)recent_anomalies / (float)total_readings;
+    if (anomaly_ratio > 0.3)
+    {
+        anomaly_threshold += 0.05;
+        Serial.println("[TinyML] Too many anomalies, increasing threshold");
+    }
+    else if (anomaly_ratio < 0.05)
+    {
+        anomaly_threshold -= 0.05;
+        Serial.println("[TinyML] Too few anomalies, decreasing threshold");
+    }
+    if (anomaly_threshold < 0.3)
+        anomaly_threshold = 0.3;
+    if (anomaly_threshold > 0.8)
+        anomaly_threshold = 0.8;
+
+    Serial.print("[TinyML] New threshold: ");
+    Serial.println(anomaly_threshold);
+
+    total_readings = 0;
+    recent_anomalies = 0;
+}
 
 void setupTinyML()
 {
@@ -57,27 +93,71 @@ void tiny_ml_task(void *pvParameters)
         SensorData data_receive;
         if (xQueueReceive(xQueueForTinyML, &data_receive, portMAX_DELAY) == pdTRUE)
         {
+
+            total_readings++;
+
+            if (total_readings >= readings)
+            {
+                SetAnomalyThreshold();
+            }
+
             float temperature = data_receive.temperature;
             float humidity = data_receive.humidity;
             input->data.f[0] = temperature;
             input->data.f[1] = humidity;
 
+            // Run inference
+            TfLiteStatus invoke_status = interpreter->Invoke();
+            if (invoke_status != kTfLiteOk)
+            {
+                error_reporter->Report("Invoke failed");
+                return;
+            }
 
-        // Run inference
-        TfLiteStatus invoke_status = interpreter->Invoke();
-        if (invoke_status != kTfLiteOk)
-        {
-            error_reporter->Report("Invoke failed");
-            return;
+            float result = output->data.f[0];
+
+            String anomaly_type;
+            bool anomaly_detected = false;
+
+            if (result > anomaly_threshold + 0.2)
+            {
+                anomaly_type = "CRITICAL";
+                anomaly_detected = true;
+                recent_anomalies++;
+            }
+            else if (result >= anomaly_threshold)
+            {
+                anomaly_type = "WARNING";
+                anomaly_detected = true;
+                recent_anomalies++;
+            }
+            else
+            {
+                anomaly_type = "NORMAL";
+                anomaly_detected = false;
+            }
+
+            MLResult ml_result;
+            ml_result.temperature = data_receive.temperature;
+            ml_result.humidity = data_receive.humidity;
+            ml_result.inference_result = result;
+            ml_result.anomaly_detected = anomaly_detected;
+            ml_result.anomaly_type = anomaly_type;
+
+            if(xSemaphoreTake(xSemaphoreMutex, portMAX_DELAY) == pdTRUE)
+            {
+            Serial.print("[TinyML] T:");
+            Serial.print(ml_result.temperature);
+            Serial.print(" H:");
+            Serial.print(ml_result.humidity);
+            Serial.print(" | Result:");
+            Serial.print(ml_result.inference_result); 
+            Serial.print(" | Threshold:");
+            Serial.print(anomaly_threshold, 2);
+            Serial.print(" | Level:");
+            Serial.println(ml_result.anomaly_type);
+            xSemaphoreGive(xSemaphoreMutex);
+            }
         }
-
-                float result = output->data.f[0];
-                Serial.print("[TinyML] Data: (T:");
-                Serial.print(data_receive.temperature);
-                Serial.print(", H:");
-                Serial.print(data_receive.humidity);
-                Serial.print(") -> Result: ");
-                Serial.println(result);
     }
-}
 }
