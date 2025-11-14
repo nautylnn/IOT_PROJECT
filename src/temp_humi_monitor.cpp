@@ -1,11 +1,11 @@
 #include "temp_humi_monitor.h"
-#include "global.h"
 DHT20 dht20;
 LiquidCrystal_I2C lcd(33,16,2);
 
-
-void temp_humi_monitor(void *pvParameters){
-
+void temp_humi_monitor(void *pvParameters) {
+    float temperature;
+    float humidity;
+    
     Wire.begin(11, 12);
     dht20.begin();
 
@@ -21,8 +21,7 @@ void temp_humi_monitor(void *pvParameters){
 
     while (1){
         /* code */
-        
-        dht20.read();
+        vTaskDelay(50);
         // Reading temperature in Celsius
         float temperature = dht20.getTemperature();
         // Reading humidity
@@ -37,14 +36,15 @@ void temp_humi_monitor(void *pvParameters){
             lcd.setCursor(0, 0);
             lcd.print("Sensor Error!");
             //return;
-        } else
-        {
-        SensorData sensordata;
-        sensordata.temperature = temperature;
-        sensordata.humidity = humidity;
-        xQueueSend(xQueueForLedBlink, &sensordata, 0);
-        xQueueSend(xQueueForNeoPixel, &sensordata, 0);
-        xQueueSend(xQueueForTinyML, &sensordata, 0);
+        } else {
+            SensorData sensordata;
+            sensordata.temperature = temperature;
+            sensordata.humidity = humidity;
+            xQueueSend(xQueueForLedBlink, &sensordata, 0);
+            xQueueSend(xQueueForNeoPixel, &sensordata, 0);
+            xQueueSend(xQueueForTinyML, &sensordata, 0);
+            xQueueSend(xQueueForCoreIOT, &sensordata, 0);
+            xQueueSend(xQueueForMainServer, &sensordata, 0);
            
 
             lcd.clear();
@@ -68,9 +68,20 @@ void temp_humi_monitor(void *pvParameters){
             } else { 
                 lcd.print("NORM ");
             }
-        }
 
-        // Print the results
-        vTaskDelay(5000);
+            lcd.setCursor(11, 1);
+            if (humidity < 0) {
+                lcd.print("ERROR");
+            }
+            else if (humidity >= 0 && humidity < 60) {
+                lcd.print("LOW ");
+            }
+            else if (humidity >= 60 && humidity < 80) {
+                lcd.print("NORM ");
+            }
+            else {
+                lcd.print("WET ");
+            }
+        }
     }
 }

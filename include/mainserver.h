@@ -1,5 +1,5 @@
-#ifndef ___MAIN_SERVER__
-#define ___MAIN_SERVER__
+#ifndef __MAIN_SERVER_
+#define __MAIN_SERVER_
 #include <Arduino.h>
 #include <WiFi.h>
 #include <WebServer.h>
@@ -18,7 +18,7 @@
 String mainPage();
 String settingsPage();
 
-void startAP();
+void startAPmainserver();
 void setupServer();
 void connectToWiFi();
 

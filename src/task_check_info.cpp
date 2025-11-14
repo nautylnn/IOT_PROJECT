@@ -75,7 +75,7 @@ bool check_info_File(bool check)
   {
     if (!check)
     {
-      startAP();
+      startAPinWIFI();
     }
     return false;
   }

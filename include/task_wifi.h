@@ -6,6 +6,7 @@
 #include <task_webserver.h>
 
 extern bool Wifi_reconnect();
-extern void startAP();
+extern void startAPinWIFI();
+extern void startSTA();
 
 #endif
