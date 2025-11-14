@@ -2,7 +2,7 @@
 DHT20 dht20;
 LiquidCrystal_I2C lcd(33,16,2);
 
-void temp_humi_monitor(void *pvParameters){
+void temp_humi_monitor(void *pvParameters) {
     float temperature;
     float humidity;
     
@@ -37,14 +37,14 @@ void temp_humi_monitor(void *pvParameters){
             lcd.print("Sensor Error!");
             //return;
         } else {
-        SensorData sensordata;
-        sensordata.temperature = temperature;
-        sensordata.humidity = humidity;
-        xQueueSend(xQueueForLedBlink, &sensordata, 0);
-        xQueueSend(xQueueForNeoPixel, &sensordata, 0);
-        xQueueSend(xQueueForTinyML, &sensordata, 0);
-        xQueueSend(xQueueForCoreIOT, &sensordata, 0);
-        xQueueSend(xQueueForMainServer, &sensordata, 0);
+            SensorData sensordata;
+            sensordata.temperature = temperature;
+            sensordata.humidity = humidity;
+            xQueueSend(xQueueForLedBlink, &sensordata, 0);
+            xQueueSend(xQueueForNeoPixel, &sensordata, 0);
+            xQueueSend(xQueueForTinyML, &sensordata, 0);
+            xQueueSend(xQueueForCoreIOT, &sensordata, 0);
+            xQueueSend(xQueueForMainServer, &sensordata, 0);
            
 
             lcd.clear();
@@ -83,4 +83,5 @@ void temp_humi_monitor(void *pvParameters){
                 lcd.print("WET ");
             }
         }
+    }
 }
